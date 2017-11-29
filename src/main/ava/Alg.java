@@ -27,72 +27,77 @@ public class Alg {
     }
 
     public void run() throws IOException {
-        Map<String, Set<String>> map_var_val = new HashMap<>();
+        Map<String, Set<String>> variableToNumbers = new HashMap<>();
         Character c_line;
         Character c_rule;
-        StringBuilder valueOfVariable;
-        int i, j, offset;
-
-        for (int k = 0; k < rules.size(); k++) {
-            Pair<String, String> rule = rules.get(k);
-            j = 0;
-            offset = 0;
+        StringBuilder lineOfNumbers = null;
+        boolean allocateMemoryForNumbersStringFlag;
+        Pair<String, String> rule;
+        int currentElementIndexForRule;
+        int offsetTheLine = 0;
+        int controlPointIndex;
+        boolean isItSafetyToSaveControlPointIndex;
+        for (int i = 0; i < rules.size(); i++) {
+            rule = rules.get(i);
+            variableToNumbers.clear();
+            isItSafetyToSaveControlPointIndex = true;
+            allocateMemoryForNumbersStringFlag = true;
+            controlPointIndex = 0;
+            currentElementIndexForRule = 0;
             newRule:
-            for (i = 0; i < rule.getKey().length(); i++) {
-                c_rule = rule.getKey().charAt(i);
-                if (isItVariable(c_rule)) {
-                    if (!map_var_val.containsKey(Character.toString(c_rule)))
-                        map_var_val.put(Character.toString(c_rule), new HashSet<>());
-                    valueOfVariable = new StringBuilder();
-                    for (; j < this.line.length(); j++) {
-                        c_line = this.line.charAt(j);
-                        if (isItAxiom(c_line)) {
-                            valueOfVariable.append(c_line);
-                            if (j == this.line.length() - 1) {
-                                map_var_val.get(Character.toString(c_rule)).add(valueOfVariable.toString());
-                            }
-                        } else if (j == offset) {
-                            map_var_val.clear();
-                            break newRule;
-                        } else {
-                            if (valueOfVariable.length() != 0)
-                                map_var_val.get(Character.toString(c_rule)).add(valueOfVariable.toString());
-                            break;
-                        }
-                    }
-                } else {
-                    if (c_rule != this.line.charAt(j)) {
-                        map_var_val.clear();
-                        break;
-                    } else {
-                        j++;
-                    }
+            for (int j = 0; j < line.length(); j++) {
+                c_line = line.charAt(j);
+                c_rule = rule.getKey().charAt(currentElementIndexForRule);
+                if (allocateMemoryForNumbersStringFlag) {
+                    lineOfNumbers = new StringBuilder();
+                    allocateMemoryForNumbersStringFlag = false;
                 }
-                if (i == rule.getKey().length() - 1) {
-                    boolean flag = false;
-                    for (Set<String> set : map_var_val.values()) {
-                        if (set.size() != 1) {
-                            map_var_val.clear();
-                            i = -1;
-                            offset++;
-                            j = offset;
-                            flag = true;
+                if (isItVariable(c_rule) && !variableToNumbers.containsKey(Character.toString(c_rule))) {
+                    variableToNumbers.put(Character.toString(c_rule), new HashSet<>());
+                }
+
+                if (isItAxiom(c_line) && isItVariable(c_rule)) { // - 1 x
+                    isItSafetyToSaveControlPointIndex = false;
+                    lineOfNumbers.append(c_line);
+                } else if (!isItAxiom(c_line) && isItVariable(c_rule)) { // - / x
+                    currentElementIndexForRule++;
+                    c_rule = rule.getKey().charAt(currentElementIndexForRule);
+                    if(isItVariable(c_rule)){
+
+                    } else {
+                        if(c_line != c_rule){
                             break;
                         }
+                        currentElementIndexForRule++;
+                        allocateMemoryForNumbersStringFlag = true;
                     }
-                    if (!flag) {
-                        String key = rule.getKey();
-                        String value = rule.getValue();
-                        for (Map.Entry<String, Set<String>> setEntry : map_var_val.entrySet()) {
-                            key = key.replaceAll(setEntry.getKey(), setEntry.getValue().toArray()[0].toString());
-                            value = value.replaceAll(setEntry.getKey(), setEntry.getValue().toArray()[0].toString());
+                } else if (!isItVariable(c_rule)) { // - 1/ 1/
+                    if (c_line != c_rule) {
+                        break;
+                    }
+                    if (isItSafetyToSaveControlPointIndex) {
+                        controlPointIndex = j;
+                    }
+                    if (lineOfNumbers.length() > 0) {
+                        variableToNumbers.get(Character.toString(c_rule)).add(lineOfNumbers.toString());
+                        allocateMemoryForNumbersStringFlag = true;
+                    }
+                    currentElementIndexForRule++;
+                }
+                if (j == line.length() - 1) {
+                    for (Set<String> values : variableToNumbers.values()) {
+                        if(values.size() != 1){
+                            break newRule;
                         }
-                        this.line = this.line.replace(key, value);
-                        fw.write(this.line + "\n");
-                        fw.flush();
-                        map_var_val.clear();
-                        k--;
                     }
+                    String leftPartOfRule = rule.getKey();
+                    String rightPartOfRule = rule.getValue();
+                    for (Map.Entry<String, Set<String>> setEntry : variableToNumbers.entrySet()) {
+                        leftPartOfRule = leftPartOfRule.replaceAll(setEntry.getKey(), setEntry.getValue().toArray()[0].toString());
+                        rightPartOfRule = rightPartOfRule.replaceAll(setEntry.getKey(), setEntry.getValue().toArray()[0].toString());
+                    }
+                    line = line.replace(leftPartOfRule, rightPartOfRule);
+                    i = -1;
                 }
             }
         }

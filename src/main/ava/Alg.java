@@ -6,9 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 
-/**
- * Created by slava on 18.11.2017.
- */
+
 public class Alg {
     private String line;
     private List<Pair<String, String>> rules;

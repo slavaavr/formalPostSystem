@@ -5,9 +5,7 @@ import javafx.util.Pair;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * Created by slava on 18.11.2017.
- */
+
 public class ProcessingOfRawData {
     private Entity entity;
     private String line;
@@ -17,10 +15,7 @@ public class ProcessingOfRawData {
         this.entity = new Entity();
         String prefix;
         lines.removeIf(s -> s.length() == 0);
-        if (lines.size() != 5) {
-            System.err.println("Присутствуют лишние входные данные");
-            System.exit(1);
-        }
+
         int counter = 0;
         for (String line : lines) {
             prefix = line.substring(0, line.indexOf('='));

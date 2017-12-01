@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.List;
+import java.util.*;
 
 
 public class Main {
@@ -12,7 +12,16 @@ public class Main {
         List<String> lines = Files.readAllLines(Paths.get("src/input.txt"), StandardCharsets.UTF_8);
         ProcessingOfRawData p = new ProcessingOfRawData(lines);
         Alg alg = new Alg(p, "src/output.txt");
-        alg.run();
+//        alg.run();
+        Integer i=0;
+        foo(i);
+        System.out.println(i);
+        LinkedHashSet<String> s = new LinkedHashSet<>();
+        List<Integer> l = new ArrayList<>();
+
+    }
+    static void foo(Integer i){
+        i++;
     }
 
 }

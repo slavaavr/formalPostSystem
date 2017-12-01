@@ -28,26 +28,27 @@ public class Alg {
 
     public void run() throws IOException {
         Map<String, Set<String>> variableToNumbers = new HashMap<>();
+        Map<String, List<String>> variableToNumbersForComplexTypeTemp = new LinkedHashMap<>();
         Character c_line;
         Character c_rule;
         StringBuilder lineOfNumbers = null;
+        StringBuilder tempLineOfNumbersForComplexType = new StringBuilder();
+        int tempIndexLineOfNumbersForComplexType;
         boolean allocateMemoryForNumbersStringFlag;
         Pair<String, String> rule;
-        int currentElementIndexForRule;
+        int currentElementRuleIndex;
         int offsetTheLine = 0;
-        int controlPointIndex;
-        boolean isItSafetyToSaveControlPointIndex;
+        int flashback;
         for (int i = 0; i < rules.size(); i++) {
             rule = rules.get(i);
             variableToNumbers.clear();
-            isItSafetyToSaveControlPointIndex = true;
             allocateMemoryForNumbersStringFlag = true;
-            controlPointIndex = 0;
-            currentElementIndexForRule = 0;
+            currentElementRuleIndex = 0;
+            flashback = 0;
             newRule:
             for (int j = 0; j < line.length(); j++) {
                 c_line = line.charAt(j);
-                c_rule = rule.getKey().charAt(currentElementIndexForRule);
+                c_rule = rule.getKey().charAt(currentElementRuleIndex);
                 if (allocateMemoryForNumbersStringFlag) {
                     lineOfNumbers = new StringBuilder();
                     allocateMemoryForNumbersStringFlag = false;
@@ -57,36 +58,62 @@ public class Alg {
                 }
 
                 if (isItAxiom(c_line) && isItVariable(c_rule)) { // - 1 x
-                    isItSafetyToSaveControlPointIndex = false;
                     lineOfNumbers.append(c_line);
                 } else if (!isItAxiom(c_line) && isItVariable(c_rule)) { // - / x
-                    currentElementIndexForRule++;
-                    c_rule = rule.getKey().charAt(currentElementIndexForRule);
-                    if(isItVariable(c_rule)){
+                    currentElementRuleIndex++;
+                    if (currentElementRuleIndex < rule.getKey().length()) {
+                        c_rule = rule.getKey().charAt(currentElementRuleIndex); // next c_rule
+                        if (isItVariable(c_rule)) {
+                            currentElementRuleIndex--;
+                            while(!isItVariable(c_rule = rule.getKey().charAt(currentElementRuleIndex)) || (currentElementRuleIndex < rule.getKey().length())){
+                                if (!variableToNumbers.containsKey(Character.toString(c_rule))) {
+                                    variableToNumbers.put(Character.toString(c_rule), new HashSet<>());
+                                }
+                                if(!variableToNumbersForComplexTypeTemp.containsKey(Character.toString(c_rule))){
+                                    variableToNumbersForComplexTypeTemp.put(Character.toString(c_rule), new ArrayList<>());
+                                }
+                                currentElementRuleIndex++;
+                            }
+                            tempIndexLineOfNumbersForComplexType = j - 1;
+                            while(!isItAxiom(c_line = line.charAt(tempIndexLineOfNumbersForComplexType)) || (tempIndexLineOfNumbersForComplexType > 0)){
+                                tempLineOfNumbersForComplexType.append(c_line);
+                                tempIndexLineOfNumbersForComplexType--;
+                            }
+                            tempLineOfNumbersForComplexType.reverse();
+                            if(variableToNumbersForComplexTypeTemp.size() > tempLineOfNumbersForComplexType.length()){
+                                System.err.println("Ошибка в правиле: " + rule.getKey());
+                                System.exit(1);
+                            }
+                            // шаманство/
+                            List<Integer> tempList = new ArrayList<>();
+                            Set<String> set = new LinkedHashSet<>();
+                            for (int k = 0; k < variableToNumbersForComplexTypeTemp.size(); k++) {
+                                tempList.add(k);
+                            }
 
-                    } else {
-                        if(c_line != c_rule){
-                            break;
+                            // /шаманство
+                        } else {
+                            if (c_line != c_rule) {
+                                break;
+                            }
+                            variableToNumbers.get(Character.toString(c_rule)).add(lineOfNumbers.toString());
+                            allocateMemoryForNumbersStringFlag = true;
+                            currentElementRuleIndex++;
                         }
-                        currentElementIndexForRule++;
-                        allocateMemoryForNumbersStringFlag = true;
                     }
                 } else if (!isItVariable(c_rule)) { // - 1/ 1/
                     if (c_line != c_rule) {
                         break;
                     }
-                    if (isItSafetyToSaveControlPointIndex) {
-                        controlPointIndex = j;
-                    }
                     if (lineOfNumbers.length() > 0) {
                         variableToNumbers.get(Character.toString(c_rule)).add(lineOfNumbers.toString());
                         allocateMemoryForNumbersStringFlag = true;
                     }
-                    currentElementIndexForRule++;
+                    currentElementRuleIndex++;
                 }
-                if (j == line.length() - 1) {
+                if ((j == line.length() - 1) || (currentElementRuleIndex > rule.getKey().length() - 1)) {
                     for (Set<String> values : variableToNumbers.values()) {
-                        if(values.size() != 1){
+                        if (values.size() != 1) {
                             break newRule;
                         }
                     }

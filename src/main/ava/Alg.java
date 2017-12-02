@@ -38,13 +38,11 @@ public class Alg {
         Pair<String, String> rule;
         int currentElementRuleIndex;
         int offsetTheLine = 0;
-        int flashback;
         for (int i = 0; i < rules.size(); i++) {
             rule = rules.get(i);
             variableToNumbers.clear();
             allocateMemoryForNumbersStringFlag = true;
             currentElementRuleIndex = 0;
-            flashback = 0;
             newRule:
             for (int j = 0; j < line.length(); j++) {
                 c_line = line.charAt(j);
@@ -65,32 +63,64 @@ public class Alg {
                         c_rule = rule.getKey().charAt(currentElementRuleIndex); // next c_rule
                         if (isItVariable(c_rule)) {
                             currentElementRuleIndex--;
-                            while(!isItVariable(c_rule = rule.getKey().charAt(currentElementRuleIndex)) || (currentElementRuleIndex < rule.getKey().length())){
+                            while (!isItVariable(c_rule = rule.getKey().charAt(currentElementRuleIndex)) || (currentElementRuleIndex < rule.getKey().length())) {
                                 if (!variableToNumbers.containsKey(Character.toString(c_rule))) {
                                     variableToNumbers.put(Character.toString(c_rule), new HashSet<>());
                                 }
-                                if(!variableToNumbersForComplexTypeTemp.containsKey(Character.toString(c_rule))){
+                                if (!variableToNumbersForComplexTypeTemp.containsKey(Character.toString(c_rule))) {
                                     variableToNumbersForComplexTypeTemp.put(Character.toString(c_rule), new ArrayList<>());
                                 }
                                 currentElementRuleIndex++;
                             }
                             tempIndexLineOfNumbersForComplexType = j - 1;
-                            while(!isItAxiom(c_line = line.charAt(tempIndexLineOfNumbersForComplexType)) || (tempIndexLineOfNumbersForComplexType > 0)){
+                            while (!isItAxiom(c_line = line.charAt(tempIndexLineOfNumbersForComplexType)) || (tempIndexLineOfNumbersForComplexType > 0)) {
                                 tempLineOfNumbersForComplexType.append(c_line);
                                 tempIndexLineOfNumbersForComplexType--;
                             }
                             tempLineOfNumbersForComplexType.reverse();
-                            if(variableToNumbersForComplexTypeTemp.size() > tempLineOfNumbersForComplexType.length()){
+                            if (variableToNumbersForComplexTypeTemp.size() > tempLineOfNumbersForComplexType.length()) {
                                 System.err.println("Ошибка в правиле: " + rule.getKey());
                                 System.exit(1);
                             }
                             // шаманство/
-                            List<Integer> tempList = new ArrayList<>();
+                            Integer[] tempArray = new Integer[variableToNumbersForComplexTypeTemp.size()];
                             Set<String> set = new LinkedHashSet<>();
-                            for (int k = 0; k < variableToNumbersForComplexTypeTemp.size(); k++) {
-                                tempList.add(k);
-                            }
+                            StringBuilder ans = new StringBuilder(); // format like - 1|1|111
+                            int t, lastValue;
 
+                            for (int k = 0; k < tempArray.length; k++) {
+                                tempArray[k] = k;
+                            }
+                            t = tempArray.length - 1;
+                            lastValue = tempLineOfNumbersForComplexType.length() - 1;
+                            do {
+                                for (int k = 0; k < tempArray.length - 1; k++) {
+                                    ans.append(tempLineOfNumbersForComplexType.substring(tempArray[k], tempArray[k + 1])).append("|");
+                                    if (k == tempArray.length - 2) {
+                                        if (tempArray[0] > 0) {
+                                            ans.append(tempLineOfNumbersForComplexType.substring(tempArray[k])).append(tempLineOfNumbersForComplexType.substring(0, tempArray[0]));
+                                        } else {
+                                            ans.append(tempLineOfNumbersForComplexType.substring(tempArray[k]));
+                                        }
+                                    }
+                                }
+                                if (tempArray[t] < lastValue) {
+                                    tempArray[t]++;
+                                    if (tempArray[t] == lastValue) {
+                                        lastValue = tempArray[t] - 1;
+                                        t--;
+                                    }
+                                }
+                            } while (set.add(ans.toString()));
+                            for (String s : set) {
+                                t = 0;
+                                String[] split = s.split("|");
+                                for (String key : variableToNumbersForComplexTypeTemp.keySet()) {
+                                    variableToNumbersForComplexTypeTemp.get(key).add(split[t]);
+                                    t++;
+                                }
+                            }
+                            tempLineOfNumbersForComplexType.delete(0, tempLineOfNumbersForComplexType.length());
                             // /шаманство
                         } else {
                             if (c_line != c_rule) {

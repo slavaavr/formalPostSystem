@@ -27,7 +27,7 @@ public class Alg {
     }
 
     public void run() throws IOException {
-        Map<String, Set<String>> variableToNumbers = new HashMap<>();
+        Map<String, Set<String>> variableToNumbers = new LinkedHashMap<>();
         Map<String, List<String>> variableToNumbersForComplexTypeTemp = new LinkedHashMap<>();
         Character c_line;
         Character c_rule;
@@ -121,6 +121,9 @@ public class Alg {
                                 }
                             }
                             tempLineOfNumbersForComplexType.delete(0, tempLineOfNumbersForComplexType.length());
+                            for (String key : variableToNumbersForComplexTypeTemp.keySet()) {
+                                variableToNumbers.get(key).add(variableToNumbersForComplexTypeTemp.get(key).get(0));
+                            }
                             // /шаманство
                         } else {
                             if (c_line != c_rule) {
@@ -142,8 +145,18 @@ public class Alg {
                     currentElementRuleIndex++;
                 }
                 if ((j == line.length() - 1) || (currentElementRuleIndex > rule.getKey().length() - 1)) {
-                    for (Set<String> values : variableToNumbers.values()) {
-                        if (values.size() != 1) {
+                    for (Map.Entry<String, Set<String>> setEntry : variableToNumbers.entrySet()) {
+                        if(setEntry.getValue().size() != 1 && variableToNumbersForComplexTypeTemp.get(setEntry.getKey()).size() != 0){
+                            for (String key : variableToNumbersForComplexTypeTemp.keySet()) {
+                                variableToNumbers.get(key).remove(variableToNumbersForComplexTypeTemp.get(key).remove(0));
+                                variableToNumbers.get(key).add(variableToNumbersForComplexTypeTemp.get(key).get(0));
+                            }
+                        } else if(setEntry.getValue().size() != 1 && offsetTheLine < line.length()){
+                            j = offsetTheLine;
+                            offsetTheLine++;
+                            variableToNumbers.clear();
+                            variableToNumbersForComplexTypeTemp.clear();
+                        } else if (setEntry.getValue().size() != 1){
                             break newRule;
                         }
                     }
@@ -154,6 +167,8 @@ public class Alg {
                         rightPartOfRule = rightPartOfRule.replaceAll(setEntry.getKey(), setEntry.getValue().toArray()[0].toString());
                     }
                     line = line.replace(leftPartOfRule, rightPartOfRule);
+                    fw.write(line);
+                    fw.flush();
                     i = -1;
                 }
             }

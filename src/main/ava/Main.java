@@ -12,15 +12,15 @@ public class Main {
         List<String> lines = Files.readAllLines(Paths.get("src/input.txt"), StandardCharsets.UTF_8);
         ProcessingOfRawData p = new ProcessingOfRawData(lines);
         Alg alg = new Alg(p, "src/output.txt");
-//        alg.run();
-        String s = "abcd";
-        System.out.println(s.substring(0,1));
-        List<Integer> l = new ArrayList<>();
-        l.add(1);
-        l.add(2);
-        Integer[] o = l.toArray(new Integer[l.size()]);
-        o[0] = 33;
-        System.out.println(o[0]);
+        alg.run();
+//        String s = "abcd";
+//        System.out.println(s.substring(0,1));
+//        List<Integer> l = new ArrayList<>();
+//        l.add(1);
+//        l.add(2);
+//        Integer[] o = l.toArray(new Integer[l.size()]);
+//        o[0] = 33;
+//        System.out.println(o[0]);
 
     }
     static void foo(Integer i){

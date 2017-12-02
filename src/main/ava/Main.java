@@ -37,4 +37,10 @@ public class Main {
  A1 = {1}
  R = {1+yx/x=->1+y/x=1}
 
+ line = {1111/11=}
+ A = {1,/,=}
+ X = {x,y}
+ A1 = {1}
+ R = {yx/x=->y/x=1}
+
  */

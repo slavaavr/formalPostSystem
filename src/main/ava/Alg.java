@@ -28,7 +28,7 @@ public class Alg {
 
     public void run() throws IOException {
         Map<String, Set<String>> variableToNumbers = new LinkedHashMap<>();
-        Map<String, List<String>> variableToNumbersForComplexTypeTemp = new LinkedHashMap<>();
+        List<Map<String, List<String>>> variableToNumbersForComplexTypeTemp = new ArrayList<>();
         Character c_line;
         Character c_rule;
         StringBuilder lineOfNumbers = null;
@@ -37,16 +37,19 @@ public class Alg {
         boolean allocateMemoryForNumbersStringFlag;
         Pair<String, String> rule;
         int currentElementRuleIndex;
-        int offsetTheLine = 0;
+        int offsetTheLine;
         for (int i = 0; i < rules.size(); i++) {
             rule = rules.get(i);
             variableToNumbers.clear();
             variableToNumbersForComplexTypeTemp.clear();
             allocateMemoryForNumbersStringFlag = true;
             currentElementRuleIndex = 0;
-            newRule:
+            offsetTheLine = 0;
             for (int j = 0; j < line.length(); j++) {
                 c_line = line.charAt(j);
+                if(currentElementRuleIndex>rule.getKey().length()-1){
+                    break;
+                }
                 c_rule = rule.getKey().charAt(currentElementRuleIndex);
                 if (allocateMemoryForNumbersStringFlag) {
                     lineOfNumbers = new StringBuilder();
@@ -63,28 +66,30 @@ public class Alg {
                     if (currentElementRuleIndex < rule.getKey().length()) {
                         c_rule = rule.getKey().charAt(currentElementRuleIndex); // next c_rule
                         if (isItVariable(c_rule)) {
+                            Map<String, List<String>> var_value = new LinkedHashMap<>();
                             currentElementRuleIndex--;
                             while ((currentElementRuleIndex < rule.getKey().length()) && isItVariable(c_rule = rule.getKey().charAt(currentElementRuleIndex))) {
                                 if (!variableToNumbers.containsKey(Character.toString(c_rule))) {
                                     variableToNumbers.put(Character.toString(c_rule), new HashSet<>());
                                 }
-                                if (!variableToNumbersForComplexTypeTemp.containsKey(Character.toString(c_rule))) {
-                                    variableToNumbersForComplexTypeTemp.put(Character.toString(c_rule), new ArrayList<>());
+                                if (!var_value.containsKey(Character.toString(c_rule))) {
+                                    var_value.put(Character.toString(c_rule), new ArrayList<>());
                                 }
                                 currentElementRuleIndex++;
                             }
                             tempIndexLineOfNumbersForComplexType = j - 1;
-                            while ((tempIndexLineOfNumbersForComplexType >= 0) && isItAxiom(c_line = line.charAt(tempIndexLineOfNumbersForComplexType))) {
+                            while ((tempIndexLineOfNumbersForComplexType >= offsetTheLine) && isItAxiom(c_line = line.charAt(tempIndexLineOfNumbersForComplexType))) {
                                 tempLineOfNumbersForComplexType.append(c_line);
                                 tempIndexLineOfNumbersForComplexType--;
                             }
                             tempLineOfNumbersForComplexType.reverse();
-                            if (variableToNumbersForComplexTypeTemp.size() > tempLineOfNumbersForComplexType.length()) {
-                                System.err.println("Ошибка в правиле: " + rule.getKey());
-                                System.exit(1);
+                            if (var_value.size() > tempLineOfNumbersForComplexType.length()) {
+//                                System.err.println("Ошибка в правиле (количество переменных больше количества символов): " + rule.getKey() + " | " + tempLineOfNumbersForComplexType);
+                                break;
                             }
+                            variableToNumbersForComplexTypeTemp.add(var_value);
                             // шаманство/
-                            Integer[] tempArray = new Integer[variableToNumbersForComplexTypeTemp.size()];
+                            Integer[] tempArray = new Integer[var_value.size()];
                             Set<String> set = new LinkedHashSet<>();
                             StringBuilder ans = new StringBuilder(); // format like - 1|1|111
                             int t, lastValue;
@@ -100,9 +105,9 @@ public class Alg {
                                     ans.append(tempLineOfNumbersForComplexType.substring(tempArray[k], tempArray[k + 1])).append(" ");
                                     if (k == tempArray.length - 2) {
                                         if (tempArray[0] > 0) {
-                                            ans.append(tempLineOfNumbersForComplexType.substring(tempArray[k+1])).append(tempLineOfNumbersForComplexType.substring(0, tempArray[0]));
+                                            ans.append(tempLineOfNumbersForComplexType.substring(tempArray[k + 1])).append(tempLineOfNumbersForComplexType.substring(0, tempArray[0]));
                                         } else {
-                                            ans.append(tempLineOfNumbersForComplexType.substring(tempArray[k+1]));
+                                            ans.append(tempLineOfNumbersForComplexType.substring(tempArray[k + 1]));
                                         }
                                     }
                                 }
@@ -117,24 +122,24 @@ public class Alg {
                             for (String s : set) {
                                 t = 0;
                                 String[] split = s.split(" ");
-                                for (String key : variableToNumbersForComplexTypeTemp.keySet()) {
-                                    variableToNumbersForComplexTypeTemp.get(key).add(split[t]);
+                                for (String key : var_value.keySet()) {
+                                    var_value.get(key).add(split[t]);
                                     t++;
                                 }
                             }
                             tempLineOfNumbersForComplexType.delete(0, tempLineOfNumbersForComplexType.length());
-                            for (String key : variableToNumbersForComplexTypeTemp.keySet()) {
-                                variableToNumbers.get(key).add(variableToNumbersForComplexTypeTemp.get(key).get(0));
+                            for (String key : var_value.keySet()) {
+                                variableToNumbers.get(key).add(var_value.get(key).get(0));
                             }
                             lineOfNumbers.delete(0, lineOfNumbers.length());
                             tempLineOfNumbersForComplexType.delete(0, tempLineOfNumbersForComplexType.length());
                             currentElementRuleIndex++;
                             // /шаманство
                         } else {
-                            if (c_line != c_rule) {
+                            if (c_line != c_rule || lineOfNumbers.length() == 0) {
                                 break;
                             }
-                            variableToNumbers.get(Character.toString(rule.getKey().charAt(currentElementRuleIndex-1))).add(lineOfNumbers.toString());
+                            variableToNumbers.get(Character.toString(rule.getKey().charAt(currentElementRuleIndex - 1))).add(lineOfNumbers.toString());
                             allocateMemoryForNumbersStringFlag = true;
                             currentElementRuleIndex++;
                         }
@@ -144,31 +149,35 @@ public class Alg {
                         break;
                     }
                     if (lineOfNumbers.length() > 0) {
-                        variableToNumbers.get(Character.toString(rule.getKey().charAt(currentElementRuleIndex-1))).add(lineOfNumbers.toString());
+                        variableToNumbers.get(Character.toString(rule.getKey().charAt(currentElementRuleIndex - 1))).add(lineOfNumbers.toString());
                         allocateMemoryForNumbersStringFlag = true;
                     }
                     currentElementRuleIndex++;
                 }
-                if ((j == line.length() - 1) || (currentElementRuleIndex > rule.getKey().length() - 1)) {
-                    boolean flag = false;
-                    while()
-                    for (Map.Entry<String, Set<String>> setEntry : variableToNumbers.entrySet()) {
-                        if(setEntry.getValue().size() != 1 && variableToNumbersForComplexTypeTemp.containsKey(setEntry.getKey()) && variableToNumbersForComplexTypeTemp.get(setEntry.getKey()).size() != 0){
-                            for (String key : variableToNumbersForComplexTypeTemp.keySet()) {
-                                variableToNumbers.get(key).remove(variableToNumbersForComplexTypeTemp.get(key).remove(0));
-                                variableToNumbers.get(key).add(variableToNumbersForComplexTypeTemp.get(key).get(0));
+                if ((j == line.length() - 1) ) { // || (currentElementRuleIndex > rule.getKey().length() - 1)
+                    boolean rightRuleFlag = false;
+                    Map<String, List<String>> var_val;
+                    while (!(rightRuleFlag = isItRightRule(variableToNumbers)) && variableToNumbersForComplexTypeTemp.size() > 0) {
+                        var_val = variableToNumbersForComplexTypeTemp.remove(variableToNumbersForComplexTypeTemp.size() - 1);
+                        while (doesMapHaveElementsInList(var_val)) {
+                            for (String key : var_val.keySet()) {
+                                if (var_val.get(key).size() > 1) {
+                                    variableToNumbers.get(key).remove(var_val.get(key).remove(0));
+                                    variableToNumbers.get(key).add(var_val.get(key).get(0));
+                                }
                             }
-                        } else if(setEntry.getValue().size() != 1 && offsetTheLine < line.length()){
-                            j = offsetTheLine;
-                            offsetTheLine++;
-                            currentElementRuleIndex = 0;
-                            variableToNumbers.clear();
-                            variableToNumbersForComplexTypeTemp.clear();
-                        } else if (setEntry.getValue().size() != 1){
-                            break newRule;
+                            if (rightRuleFlag = isItRightRule(variableToNumbers)) {
+                                break;
+                            }
                         }
                     }
-                    if(flag){
+                    if (!rightRuleFlag && offsetTheLine < line.length()) {
+                        j = offsetTheLine;
+                        offsetTheLine++;
+                        currentElementRuleIndex = 0;
+                        variableToNumbers.clear();
+                        variableToNumbersForComplexTypeTemp.clear();
+                    } else if (rightRuleFlag) {
                         String leftPartOfRule = rule.getKey();
                         String rightPartOfRule = rule.getValue();
                         for (Map.Entry<String, Set<String>> setEntry : variableToNumbers.entrySet()) {
@@ -176,20 +185,28 @@ public class Alg {
                             rightPartOfRule = rightPartOfRule.replaceAll(setEntry.getKey(), setEntry.getValue().toArray()[0].toString());
                         }
                         line = line.replace(leftPartOfRule, rightPartOfRule);
-                        fw.write(line+'\n');
+                        fw.write(line + '\n');
                         fw.flush();
                         i = -1;
                     }
-
                 }
             }
         }
     }
 
-    private boolean isItRigthRule( Map<String, Set<String>> variableToNumbers){
+    private boolean doesMapHaveElementsInList(Map<String, List<String>> map) {
+        for (List<String> val : map.values()) {
+            if (val.size() > 1) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isItRightRule(Map<String, Set<String>> variableToNumbers) {
         for (Set<String> set : variableToNumbers.values()) {
-            if(set.size() != 1){
-                return  false;
+            if (set.size() != 1) {
+                return false;
             }
         }
         return true;

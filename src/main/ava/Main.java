@@ -13,20 +13,7 @@ public class Main {
         ProcessingOfRawData p = new ProcessingOfRawData(lines);
         Alg alg = new Alg(p, "src/output.txt");
         alg.run();
-//        String s = "abcd";
-//        System.out.println(s.substring(0,1));
-//        List<Integer> l = new ArrayList<>();
-//        l.add(1);
-//        l.add(2);
-//        Integer[] o = l.toArray(new Integer[l.size()]);
-//        o[0] = 33;
-//        System.out.println(o[0]);
-
     }
-    static void foo(Integer i){
-        i++;
-    }
-
 }
 
 
@@ -42,5 +29,17 @@ public class Main {
  X = {x,y}
  A1 = {1}
  R = {yx/x=->y/x=1}
+
+ line = {111111111/1111=}
+ A = {1,/,.,=}
+ X = {x,y,z}
+ A1 = {1}
+ R = {x/x=->/x=1,y/x=z->z.y}
+
+ line = {11111/11=}
+ A = {1,/,=}
+ X = {x}
+ A1 = {1}
+ R = {x/x=->/x=1}
 
  */

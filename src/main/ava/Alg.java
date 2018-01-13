@@ -47,9 +47,6 @@ public class Alg {
             offsetTheLine = 0;
             for (int j = 0; j < line.length(); j++) {
                 c_line = line.charAt(j);
-                if(currentElementRuleIndex>rule.getKey().length()-1){
-                    break;
-                }
                 c_rule = rule.getKey().charAt(currentElementRuleIndex);
                 if (allocateMemoryForNumbersStringFlag) {
                     lineOfNumbers = new StringBuilder();
@@ -84,11 +81,14 @@ public class Alg {
                             }
                             tempLineOfNumbersForComplexType.reverse();
                             if (var_value.size() > tempLineOfNumbersForComplexType.length()) {
-//                                System.err.println("Ошибка в правиле (количество переменных больше количества символов): " + rule.getKey() + " | " + tempLineOfNumbersForComplexType);
+                               System.err.println("Ошибка в правиле (количество переменных больше количества символов): " + rule.getKey() + " | " + tempLineOfNumbersForComplexType);
                                 break;
                             }
                             variableToNumbersForComplexTypeTemp.add(var_value);
                             // шаманство/
+                            if(rule.getKey().charAt(currentElementRuleIndex) != line.charAt(j)){
+                                break;
+                            }
                             Integer[] tempArray = new Integer[var_value.size()];
                             Set<String> set = new LinkedHashSet<>();
                             StringBuilder ans = new StringBuilder(); // format like - 1|1|111
@@ -111,7 +111,7 @@ public class Alg {
                                         }
                                     }
                                 }
-                                if (tempArray[t] < lastValue) {
+                                if (t>=0 && tempArray[t] < lastValue) {
                                     tempArray[t]++;
                                     if (tempArray[t] == lastValue) {
                                         lastValue = tempArray[t] - 1;
@@ -154,7 +154,11 @@ public class Alg {
                     }
                     currentElementRuleIndex++;
                 }
-                if ((j == line.length() - 1) ) { // || (currentElementRuleIndex > rule.getKey().length() - 1)
+                if ((j == line.length() - 1) || (currentElementRuleIndex > rule.getKey().length() - 1)) {
+                    if(currentElementRuleIndex == rule.getKey().length() - 1 && lineOfNumbers.length() > 0){
+                        variableToNumbers.get(Character.toString(c_rule)).add(lineOfNumbers.toString());
+                        tempLineOfNumbersForComplexType.delete(0, tempLineOfNumbersForComplexType.length());
+                    }
                     boolean rightRuleFlag = false;
                     Map<String, List<String>> var_val;
                     while (!(rightRuleFlag = isItRightRule(variableToNumbers)) && variableToNumbersForComplexTypeTemp.size() > 0) {
@@ -188,6 +192,7 @@ public class Alg {
                         fw.write(line + '\n');
                         fw.flush();
                         i = -1;
+                        break;
                     }
                 }
             }
